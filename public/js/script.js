@@ -1,45 +1,80 @@
-function alterarTema() {
-    const tema = localStorage.getItem("tema")
-    const body = document.querySelector("body")
-    const button = document.querySelector(".tema-button")
+const express = require("express")
+const exphbs = require("express-handlebars")
+const mysql = require("mysql2")
 
-    if (tema) {
-        let novoTema
+const app = express()
 
-        if (tema === "light") {
-            novoTema = "dark"
-            button.innerHTML = `<img src="/imagens/sun-icon.png" alt="icone do Sol">`
-            body.classList.remove("light")
-            body.classList.add("dark")
-        } else {
-            novoTema = "light"
-            button.innerHTML = `<img src="/imagens/moon-icon.png" alt="icone de Lua">`
-            body.classList.remove("dark")
-            body.classList.add("light")
+app.engine('handlebars', exphbs.engine())
+app.set('view engine', 'handlebars')
+
+app.use(express.static('public'))
+
+//Convertendo dados do formulário em objeto javascript
+app.use(express.urlencoded({
+    extended: true
+}))
+
+app.use(express.json())
+
+//rotas
+app.post('/criar', (requisicao, resposta) => {
+    const descricao = requisicao.body.descricao
+    const completa = 0
+
+    const sql = `
+        INSERT INTO tarefas(descricao, completa)
+        VALUES ('${descricao}', '${completa}')
+    `
+
+    conexao.query(sql, (erro) => {
+        if(erro) {
+            return console.log(erro)
         }
 
-        localStorage.setItem("tema", novoTema)
-        return
-    }
+        resposta.redirect('/')
+    })
+})
 
-    localStorage.setItem("tema", "dark")
-    body.classList.add("dark")
-}
+app.get('/', ( requisicao, resposta ) => {
+    const sql = 'SELECT * FROM tarefas'
 
-function verificarTema() {
-    const tema = localStorage.getItem("tema")
-    const body = document.querySelector("body")
-    const button = document.querySelector(".tema-button")
-
-    if (tema) {
-        if (tema === "dark") {
-            body.classList.add("dark")
-            button.innerHTML = `<img src="/imagens/sun-icon.png" alt="icone do Sol">`
-        } else {
-            body.classList.add("light")
-            button.innerHTML = `<img src="/imagens/moon-icon.png" alt="icone de Lua">`
+    conexao.query(sql, (erro, dados) => {
+        if (erro) {
+            return console.log(erro)
         }
-    }
-}
 
-verificarTema()
+        console.log(dados)
+
+        const tarefas = dados.map((dado) => {
+            return {
+                id: dado.id,
+                descricao: dado.descricao,
+                completa: dados.completa === 0 ? false : true
+            }
+        })
+
+        console.log(tarefas)
+    })
+
+    resposta.render('home')
+})
+
+const conexao = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "1020",
+    database: "todoapp",
+    port: 3306
+})
+
+conexao.connect((erro) => {
+    if (erro) {
+        console.log(erro)
+    }
+
+    console.log("Estou conectado ao MySQL.")
+
+    app.listen(3000, () => {
+        console.log("Servidor rodando na Porta 3000!")
+    })
+})
