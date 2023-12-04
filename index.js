@@ -1,19 +1,22 @@
-const express=require("express")
-const exphbs =require("express-handlebars")
+const express = require("express")
+const exphbs = require("express-handlebars")
+const mysql = require("mysql2")
 
+const app = express()
 
-
-const app =express()
-
-app.engine('handlebars',exphbs.engine())
-app.set('view engine','handlebars')
+app.engine('handlebars', exphbs.engine())
+app.set('view engine', 'handlebars')
 
 app.use(express.static('public'))
 
-app.get('/', (requisicao,resposta)=> {
+app.get('/', ( requisicao, resposta ) => {
     resposta.render('home')
 })
 
-app.listen(3000,()=> {
-    console.log("servidor Rodando Na porta 3000")
+const conexao = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "1020",
+    database: "todoapp",
+    port: 3306
 })
